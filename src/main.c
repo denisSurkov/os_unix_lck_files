@@ -10,10 +10,14 @@ int main(int argc, char * argv[]) {
     }
 
     char * filenameToLock = argv[1];
-    int lockFd = lockFile(filenameToLock);
-//4.  Выполнить чтение/запись исходного файла myfile, добавить сон для наглядности;
+    struct LockedFile * lockedFile = acquireLock(filenameToLock);
+    if (lockedFile == NULL) {
+        perror("failed to acquire lock: ");
+        return -1;
+    }
 
     sleep(5);
-    releaseFile(lockFd, filenameToLock);
+
+    releaseLock(lockedFile);
     return 0;
 }
