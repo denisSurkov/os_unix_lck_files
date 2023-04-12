@@ -160,3 +160,6 @@ _deps
 *-prefix/
 
 # End of https://www.toptal.com/developers/gitignore/api/c,clion+all,cmake
+
+
+os_unix_lck_files
