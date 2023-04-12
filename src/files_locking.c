@@ -4,6 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <malloc.h>
+#include <stdlib.h>
 #include "files_locking.h"
 
 #define LOCK_EXTENSION ".lck"
@@ -27,12 +28,30 @@ int openLockFile(char * lockFilename) {
 
 int writePidToLockFile(int lockFd) {
     char payload[32];
-    int cnt = snprintf(payload, 32, "%zu", getpid());
+    int cnt = snprintf(payload, 32, "%d", getpid());
     int writeRes = write(lockFd, payload, cnt);
     if (writeRes == -1) {
         perror("failed to write pid to .lck file: ");
         return -1;
     }
+    return 0;
+}
+
+int checkCorrectPid(int lockFd) {
+    char payload[32];
+    lseek(lockFd, 0, SEEK_SET);
+    int readSize = read(lockFd, payload, 32);
+    if (readSize == -1) {
+        perror("failed to read pid .lck file while closing: ");
+        return -1;
+    }
+
+    unsigned int pidFromFile = (unsigned int) strtoul(payload, NULL, 10);
+    if (pidFromFile != getpid()) {
+        fprintf(stderr, "wrong pid in .lck file progam: %d, file: %d", getpid(), pidFromFile);
+        return -1;
+    }
+
     return 0;
 }
 
@@ -52,6 +71,9 @@ struct LockedFile * acquireLock(char * filename) {
     strcpy(lockedFile->lockFilename, filename);
     strcat(lockedFile->lockFilename, LOCK_EXTENSION);
 
+    lockedFile->lockFd = -1;
+    lockedFile->fd = -1;
+
     int lockFd = openLockFile(lockedFile->lockFilename);
     if (lockFd == -1) {
         freeLockMemory(lockedFile);
@@ -60,21 +82,37 @@ struct LockedFile * acquireLock(char * filename) {
 
     int writeRes = writePidToLockFile(lockFd);
     if (writeRes == -1) {
-        freeLockMemory(lockedFile);
+        releaseLock(lockedFile);
         return NULL;
     }
 
-
     lockedFile->lockFd = lockFd;
-    // todo: open original filename
+    int fd = open(filename, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    if (fd == -1) {
+        perror("failed to open original file: ");
+        releaseLock(lockedFile);
+        return NULL;
+    }
+
+    lockedFile->fd = fd;
 
     return lockedFile;
 }
 
 int releaseLock(struct LockedFile * lockedFile) {
-    //5.  Проверить, что файл .lck ещё существует и в нём записан свой pid. Если это так, то удалить файл, если нет — завершиться с сообщением об ошибке.
+    if (lockedFile->fd != -1) {
+        close(lockedFile->fd);
+    }
 
-    int closeRes = close(lockedFile->lockFd);
+    if (checkCorrectPid(lockedFile -> lockFd) != 0) {
+        close(lockedFile -> lockFd);
+        freeLockMemory(lockedFile);
+        return -1;
+    }
+
+    if (lockedFile -> lockFd != -1) {
+        close(lockedFile -> lockFd);
+    }
 
     if (remove(lockedFile->lockFilename) != 0) {
         perror("remove: ");
