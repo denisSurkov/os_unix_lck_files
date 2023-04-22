@@ -1,5 +1,8 @@
 #!/bin/bash
 
+PROCESS_COUNT=10
+SLEEP_TIME="5m"
+
 tasks=()
 
 function taskRunner() {
@@ -13,7 +16,7 @@ function taskRunner() {
     function trapHandler() {
         isRunning=false
         wait -n
-        echo -e "[$jobName]\ttotal: ${totalRun}\tsuccess: ${successCount}" | ./os_unix_lck_files statistics
+        echo -e "[$jobName]\ttotal: ${totalRun}\tsuccess: ${successCount}" | ./os_unix_lck_files results.txt
     }
 
     trap trapHandler SIGINT
@@ -27,9 +30,6 @@ function taskRunner() {
       totalRun=$((totalRun + 1))
     done
 }
-
-PROCESS_COUNT=10
-SLEEP_TIME="5m"
 
 function startAllProcess() {
     for i in $(seq ${PROCESS_COUNT}) ; do
@@ -52,9 +52,6 @@ function waitAllProcessToSaveStatistics() {
 
 echo -e "\e[32m[+]\e[0m\tStarting runme.sh script"
 
-echo -e "\e[32m[+]\e[0m\tAdd executable ./job_runner_helper.sh"
-chmod +x ./job_runner_helper.sh
-
 echo -e "\e[32m[+]\e[0m\tSetting trap handler"
 trap killAllProcess INT
 
@@ -71,6 +68,5 @@ killAllProcess
 echo -e "\e[32m[+]\e[0m\tWaiting for tasks to end (saving statistics)"
 waitAllProcessToSaveStatistics
 
-
-echo -e "\e[32m[+]\e[0m\e[0m\tTasks statistics"
-cat statistics
+echo -e "\e[32m[+]\e[0m\e[0m\tTasks statistics:"
+cat results.txt
