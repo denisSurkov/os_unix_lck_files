@@ -163,3 +163,5 @@ _deps
 
 
 os_unix_lck_files
+statistics
+test

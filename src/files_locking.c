@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <malloc.h>
 #include <stdlib.h>
 #include "files_locking.h"
 
@@ -87,7 +86,7 @@ struct LockedFile * acquireLock(char * filename) {
     }
 
     lockedFile->lockFd = lockFd;
-    int fd = open(filename, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    int fd = open(filename, O_CREAT | O_RDWR | O_APPEND, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (fd == -1) {
         perror("failed to open original file: ");
         releaseLock(lockedFile);
