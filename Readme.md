@@ -33,6 +33,21 @@ usage: ./os_unix_lck_files filename [-s sleep_time]
 [+]     Tasks statistics
 ```
 
+## Результаты запуска локально:
+```txt
+[job-1]	total: 29	success: 29
+[job-3]	total: 23	success: 23
+[job-6]	total: 36	success: 36
+[job-9]	total: 27	success: 27
+[job-8]	total: 36	success: 36
+[job-4]	total: 34	success: 34
+[job-5]	total: 27	success: 27
+[job-2]	total: 27	success: 27
+[job-7]	total: 34	success: 34
+[job-10]	total: 26	success: 26
+```
+
+
 ## Особенности:
 - Добавил таймер `[-s sleep_time]`, чтобы задавать время для сна;
 - Программа может читать stdin и записывать в открываемый файл. Используется для записи статистики взятия lock.
