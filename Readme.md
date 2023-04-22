@@ -8,7 +8,7 @@
 PID процесса, который взял блокировку, находится в файле.
 
 ```txt
-usage: ./os_unix_lck_files filename
+usage: ./os_unix_lck_files filename [-s sleep_time]
 ```
 
 ## Как запустить:
